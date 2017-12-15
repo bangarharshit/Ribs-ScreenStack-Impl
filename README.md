@@ -17,6 +17,7 @@ screenStackBase.pushScreen(new ViewProvider() {
         return root;
       }
     }); 
+```
 
 ```java
 // Pops a screen
