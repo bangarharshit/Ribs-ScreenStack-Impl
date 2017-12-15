@@ -17,11 +17,11 @@ screenStackBase.pushScreen(new ViewProvider() {
         return root;
       }
     });
-    
+}
 // Pops a screen    
 ```java
 if (screenStackBase.size() > 0) {
       screenStackBase.popScreen();
       return true;
-    }
+}
 ```
