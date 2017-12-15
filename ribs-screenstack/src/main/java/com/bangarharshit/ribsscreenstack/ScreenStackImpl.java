@@ -18,8 +18,8 @@ import static com.bangarharshit.ribsscreenstack.Views.whenMeasured;
 public class ScreenStackImpl implements ScreenStackBase {
 
   private final Deque<StateFulViewProvider> backStack = new ArrayDeque<>();
-  private final ViewGroup parentViewGroup;
   private View ghostView; // keep track of the disappearing view we are animating
+  private final ViewGroup parentViewGroup;
   private final Transition defaultTransiton;
   private Transition overridingTransition;
 
@@ -51,7 +51,7 @@ public class ScreenStackImpl implements ScreenStackBase {
   @Override public void popScreen(boolean shouldAnimate) {
     navigate(new Runnable() {
       @Override public void run() {
-        backStack.remove();
+        backStack.pop();
       }
     }, Direction.BACKWARD);
   }
@@ -106,8 +106,6 @@ public class ScreenStackImpl implements ScreenStackBase {
     currentView.saveHierarchyState(stateFulViewProvider.parcelableSparseArray);
   }
 
-
-
   private View removeCurrentScreen() {
     if (isAnimating()) {
       parentViewGroup.removeView(ghostView);
@@ -115,8 +113,6 @@ public class ScreenStackImpl implements ScreenStackBase {
     }
     return parentViewGroup.getChildAt(0);
   }
-
-
 
   private boolean isAnimating() {
     return ghostView != null;
@@ -138,7 +134,7 @@ public class ScreenStackImpl implements ScreenStackBase {
     if (from == null) {
       return;
     }
-    // This is the
+    // This is the last view removed.
     if (to == null) {
       parentViewGroup.removeView(from);
       return;
