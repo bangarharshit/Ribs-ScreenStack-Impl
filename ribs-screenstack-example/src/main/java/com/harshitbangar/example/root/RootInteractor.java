@@ -18,10 +18,12 @@ package com.harshitbangar.example.root;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import com.harshitbangar.example.R;
 import com.uber.rib.core.Bundle;
@@ -43,22 +45,30 @@ public class RootInteractor extends Interactor<RootInteractor.RootPresenter, Roo
   @Inject RootPresenter presenter;
   @Inject ScreenStackBase screenStackBase;
   @Inject Context context;
-  private CompositeDisposable compositeDisposable = new CompositeDisposable();
 
   @Override protected void didBecomeActive(@Nullable Bundle savedInstanceState) {
     super.didBecomeActive(savedInstanceState);
-    compositeDisposable.add(presenter
-        .pushScreen2()
-        .subscribe(new Consumer<String>() {
-      @Override public void accept(String s) throws Exception {
-        pushScreen2(s);
-      }
-    }));
+    pushScreen1();
   }
 
-  @Override protected void willResignActive() {
-    super.willResignActive();
-    compositeDisposable.dispose();
+  private void pushScreen1() {
+    screenStackBase.pushScreen(new ViewProvider() {
+      @Override public View buildView(ViewGroup parentView) {
+        View root = LayoutInflater.from(context).inflate(R.layout.screen_1, parentView, false);
+        final EditText editText = root.findViewById(R.id.enter_name);
+        Button nextButton = root.findViewById(R.id.next_button);
+        nextButton.setOnClickListener(new View.OnClickListener() {
+          @Override public void onClick(View view) {
+            String name = editText.getText().toString();
+            if (TextUtils.isEmpty(name)) {
+              return;
+            }
+            pushScreen2(name);
+          }
+        });
+        return root;
+      }
+    });
   }
 
   private void pushScreen2(final String name) {
@@ -124,6 +134,5 @@ public class RootInteractor extends Interactor<RootInteractor.RootPresenter, Roo
    * Presenter interface implemented by this RIB's view.
    */
   interface RootPresenter {
-    Observable<String> pushScreen2();
   }
 }
