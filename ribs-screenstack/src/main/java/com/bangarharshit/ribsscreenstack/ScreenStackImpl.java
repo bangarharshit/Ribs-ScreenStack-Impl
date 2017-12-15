@@ -19,7 +19,6 @@ public class ScreenStackImpl implements ScreenStackBase {
 
   private final Deque<StateFulViewProvider> backStack = new ArrayDeque<>();
   private final ViewGroup parentViewGroup;
-  private View ghostView; // keep track of the disappearing view we are animating
   private final Transition defaultTransiton;
   private Transition overridingTransition;
 
@@ -106,20 +105,8 @@ public class ScreenStackImpl implements ScreenStackBase {
     currentView.saveHierarchyState(stateFulViewProvider.parcelableSparseArray);
   }
 
-
-
   private View removeCurrentScreen() {
-    if (isAnimating()) {
-      parentViewGroup.removeView(ghostView);
-      ghostView = null;
-    }
     return parentViewGroup.getChildAt(0);
-  }
-
-
-
-  private boolean isAnimating() {
-    return ghostView != null;
   }
 
   private View showCurrentScreen(final Direction direction) {
@@ -143,7 +130,6 @@ public class ScreenStackImpl implements ScreenStackBase {
       parentViewGroup.removeView(from);
       return;
     }
-    ghostView = from;
     final Transition transitionToUse = overridingTransition != null ? overridingTransition : defaultTransiton;
     overridingTransition = null;
     whenMeasured(to, new Views.OnMeasured() {
@@ -154,10 +140,6 @@ public class ScreenStackImpl implements ScreenStackBase {
           public void onAnimationEnd() {
             if (parentViewGroup != null) {
               parentViewGroup.removeView(from);
-              if (from == ghostView) {
-                // Only clear the ghost if it's the same as the view we just removed
-                ghostView = null;
-              }
             }
           }
         });
