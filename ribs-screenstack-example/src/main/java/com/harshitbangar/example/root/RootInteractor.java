@@ -25,15 +25,12 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import com.bangarharshit.ribsscreenstack.ScreenStack;
 import com.harshitbangar.example.R;
 import com.uber.rib.core.Bundle;
 import com.uber.rib.core.Interactor;
 import com.uber.rib.core.RibInteractor;
-import com.uber.rib.core.screenstack.ScreenStackBase;
 import com.uber.rib.core.screenstack.ViewProvider;
-import io.reactivex.Observable;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.functions.Consumer;
 import javax.inject.Inject;
 
 /**
@@ -43,7 +40,7 @@ import javax.inject.Inject;
 public class RootInteractor extends Interactor<RootInteractor.RootPresenter, RootRouter> {
 
   @Inject RootPresenter presenter;
-  @Inject ScreenStackBase screenStackBase;
+  @Inject ScreenStack screenStack;
   @Inject Context context;
 
   @Override protected void didBecomeActive(@Nullable Bundle savedInstanceState) {
@@ -52,7 +49,7 @@ public class RootInteractor extends Interactor<RootInteractor.RootPresenter, Roo
   }
 
   private void pushScreen1() {
-    screenStackBase.pushScreen(new ViewProvider() {
+    screenStack.pushScreen(new ViewProvider() {
       @Override public View buildView(ViewGroup parentView) {
         View root = LayoutInflater.from(context).inflate(R.layout.screen_1, parentView, false);
         final EditText editText = root.findViewById(R.id.enter_name);
@@ -72,7 +69,7 @@ public class RootInteractor extends Interactor<RootInteractor.RootPresenter, Roo
   }
 
   private void pushScreen2(final String name) {
-    screenStackBase.pushScreen(new ViewProvider() {
+    screenStack.pushScreen(new ViewProvider() {
       @Override public View buildView(ViewGroup parentView) {
         View root = LayoutInflater.from(context).inflate(R.layout.screen_2, parentView, false);
         TextView textView = root.findViewById(R.id.text_view);
@@ -89,7 +86,7 @@ public class RootInteractor extends Interactor<RootInteractor.RootPresenter, Roo
   }
 
   private void pushScreen3(final String name) {
-    screenStackBase.pushScreen(new ViewProvider() {
+    screenStack.pushScreen(new ViewProvider() {
       @Override public View buildView(ViewGroup parentView) {
         View root = LayoutInflater.from(context).inflate(R.layout.screen_3, parentView, false);
         TextView textView = root.findViewById(R.id.text_view);
@@ -106,7 +103,7 @@ public class RootInteractor extends Interactor<RootInteractor.RootPresenter, Roo
   }
 
   private void pushScreen4(final String name) {
-    screenStackBase.pushScreen(new ViewProvider() {
+    screenStack.pushScreen(new ViewProvider() {
       @Override public View buildView(ViewGroup parentView) {
         View root = LayoutInflater.from(context).inflate(R.layout.screen_4, parentView, false);
         TextView textView = root.findViewById(R.id.text_view);
@@ -114,7 +111,7 @@ public class RootInteractor extends Interactor<RootInteractor.RootPresenter, Roo
         Button popButton = root.findViewById(R.id.screen_2);
         popButton.setOnClickListener(new View.OnClickListener() {
           @Override public void onClick(View view) {
-            screenStackBase.popBackTo(1, false);
+            screenStack.popBackTo(1, false);
           }
         });
         return root;
@@ -123,8 +120,8 @@ public class RootInteractor extends Interactor<RootInteractor.RootPresenter, Roo
   }
 
   @Override public boolean handleBackPress() {
-    if (screenStackBase.size() > 0) {
-      screenStackBase.popScreen();
+    if (screenStack.size() > 0) {
+      screenStack.popScreen();
       return true;
     }
     return super.handleBackPress();

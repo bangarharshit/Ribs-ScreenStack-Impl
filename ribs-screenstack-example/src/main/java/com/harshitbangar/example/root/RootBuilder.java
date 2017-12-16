@@ -19,16 +19,17 @@ package com.harshitbangar.example.root;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
-import com.bangarharshit.ribsscreenstack.ScreenStackImpl;
+import com.bangarharshit.ribsscreenstack.ScreenStack;
 import com.bangarharshit.ribsscreenstack.transition.CrossFadeTransition;
+import com.bangarharshit.ribsscreenstack.transition.Transition;
 import com.harshitbangar.example.R;
 import com.uber.rib.core.InteractorBaseComponent;
 import com.uber.rib.core.ViewBuilder;
-import com.uber.rib.core.screenstack.ScreenStackBase;
 import dagger.Binds;
 import dagger.BindsInstance;
 import dagger.Provides;
 import java.lang.annotation.Retention;
+import javax.inject.Provider;
 import javax.inject.Scope;
 
 import static java.lang.annotation.RetentionPolicy.CLASS;
@@ -92,8 +93,12 @@ public class RootBuilder extends ViewBuilder<RootView, RootRouter, RootBuilder.P
 
     @RootScope
     @Provides
-    static ScreenStackBase screenStackBase(RootView view) {
-      return new ScreenStackImpl(view, new CrossFadeTransition());
+    static ScreenStack screenStack(RootView view) {
+      return new ScreenStack(view, new Provider<Transition>() {
+        @Override public Transition get() {
+          return new CrossFadeTransition();
+        }
+      });
     }
   }
 

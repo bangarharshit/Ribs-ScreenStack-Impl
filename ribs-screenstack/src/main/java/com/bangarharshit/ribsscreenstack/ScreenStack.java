@@ -5,67 +5,89 @@ import android.support.annotation.UiThread;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
+import com.bangarharshit.ribsscreenstack.transition.NoAnimationTransition;
 import com.bangarharshit.ribsscreenstack.transition.Transition;
 import com.uber.rib.core.screenstack.ScreenStackBase;
 import com.uber.rib.core.screenstack.ViewProvider;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import javax.inject.Provider;
 
-import static com.bangarharshit.ribsscreenstack.ScreenStackImpl.Direction.FORWARD;
+import static com.bangarharshit.ribsscreenstack.ScreenStack.Direction.FORWARD;
 import static com.bangarharshit.ribsscreenstack.Views.whenMeasured;
 
+/**
+ * An implementation of {@link ScreenStackBase} with support for animation and state restoration.
+ */
 @UiThread
-public class ScreenStackImpl implements ScreenStackBase {
+public final class ScreenStack implements ScreenStackBase {
 
   private final Deque<StateFulViewProvider> backStack = new ArrayDeque<>();
   private final ViewGroup parentViewGroup;
-  private final Transition defaultTransiton;
-  private Transition overridingTransition;
+  private final Provider<Transition> defaultTransitionProvider;
 
-  public ScreenStackImpl(ViewGroup parentViewGroup, Transition defaultTransiton) {
+  public ScreenStack(ViewGroup parentViewGroup,
+      Provider<Transition> defaultTransitionProvider) {
     this.parentViewGroup = parentViewGroup;
-    this.defaultTransiton = defaultTransiton;
+    this.defaultTransitionProvider = defaultTransitionProvider;
   }
 
-  public void setOverridingTransition(Transition overridingTransition) {
-    this.overridingTransition = overridingTransition;
+  public void pushScreen(final ViewProvider viewProvider, final Transition transition) {
+    navigate(
+        new Runnable() {
+          @Override public void run() {
+            backStack.push(new StateFulViewProvider(viewProvider));
+          }
+        },
+        FORWARD,
+        transition);
   }
 
   @Override public void pushScreen(final ViewProvider viewProvider) {
-    pushScreen(viewProvider, false);
+    pushScreen(viewProvider, defaultTransitionProvider.get());
   }
 
   @Override public void pushScreen(final ViewProvider viewProvider, boolean shouldAnimate) {
-    navigate(new Runnable() {
-      @Override public void run() {
-        backStack.push(new StateFulViewProvider(viewProvider));
-      }
-    }, FORWARD);
+    pushScreen(viewProvider, shouldAnimate ? defaultTransitionProvider.get() : new NoAnimationTransition());
   }
 
   @Override public void popScreen() {
-    popScreen(false);
+    popScreen(defaultTransitionProvider.get());
   }
 
   @Override public void popScreen(boolean shouldAnimate) {
-    navigate(new Runnable() {
-      @Override public void run() {
-        backStack.pop();
-      }
-    }, Direction.BACKWARD);
+    popScreen(shouldAnimate ? defaultTransitionProvider.get() : new NoAnimationTransition());
+  }
+
+  public void popScreen( final Transition transition) {
+    navigate(
+        new Runnable() {
+          @Override public void run() {
+            backStack.pop();
+          }
+        },
+        Direction.BACKWARD,
+        transition);
   }
 
   @Override public void popBackTo(final int index, boolean shouldAnimate) {
-    navigate(new Runnable() {
-      @Override public void run() {
-        if (index > size() || index < -1) {
-          throw new IllegalArgumentException("Index size invalid");
-        }
-        while (size() - 1 > index) {
-          backStack.pop();
-        }
-      }
-    }, Direction.BACKWARD);
+    popBackTo(index, shouldAnimate ? defaultTransitionProvider.get() : new NoAnimationTransition());
+  }
+
+  public void popBackTo(final int index, final Transition transition) {
+    navigate(
+        new Runnable() {
+          @Override public void run() {
+            if (index > size() || index < -1) {
+              throw new IllegalArgumentException("Index size invalid");
+            }
+            while (size() - 1 > index) {
+              backStack.pop();
+            }
+          }
+        },
+        Direction.BACKWARD,
+        transition);
   }
 
   @Override public boolean handleBackPress() {
@@ -80,12 +102,12 @@ public class ScreenStackImpl implements ScreenStackBase {
     return backStack.size();
   }
 
-  private void navigate(final Runnable backStackOperation, final Direction direction) {
+  private void navigate(final Runnable backStackOperation, final Direction direction, final Transition transition) {
     View from = removeCurrentScreen();
     saveCurrentState(from);
     backStackOperation.run();
     View to = showCurrentScreen(direction);
-    animateAndRemove(from, to, direction);
+    animateAndRemove(from, to, direction, transition);
     restoreCurrentState(to);
   }
 
@@ -120,7 +142,10 @@ public class ScreenStackImpl implements ScreenStackBase {
   }
 
   private void animateAndRemove(
-      final View from, final View to, final Direction direction) {
+      final View from,
+      final View to,
+      final Direction direction,
+      final Transition transitionToUse) {
     // This is the first view pushed.
     if (from == null) {
       return;
@@ -130,8 +155,6 @@ public class ScreenStackImpl implements ScreenStackBase {
       parentViewGroup.removeView(from);
       return;
     }
-    final Transition transitionToUse = overridingTransition != null ? overridingTransition : defaultTransiton;
-    overridingTransition = null;
     whenMeasured(to, new Views.OnMeasured() {
       @Override
       public void onMeasured() {
