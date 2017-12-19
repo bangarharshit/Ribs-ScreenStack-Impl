@@ -36,7 +36,9 @@ public final class ScreenStack implements ScreenStackBase {
     navigate(
         new Runnable() {
           @Override public void run() {
+            onCurrentViewHidden();
             backStack.push(new StateFulViewProvider(viewProvider));
+            onCurrentViewAppeared();
           }
         },
         FORWARD,
@@ -59,11 +61,13 @@ public final class ScreenStack implements ScreenStackBase {
     popScreen(shouldAnimate ? defaultTransitionProvider.get() : new NoAnimationTransition());
   }
 
-  public void popScreen( final Transition transition) {
+  public void popScreen(final Transition transition) {
     navigate(
         new Runnable() {
           @Override public void run() {
+            onCurrentViewRemoved();
             backStack.pop();
+            onCurrentViewAppeared();
           }
         },
         Direction.BACKWARD,
@@ -82,8 +86,10 @@ public final class ScreenStack implements ScreenStackBase {
               throw new IllegalArgumentException("Index size invalid");
             }
             while (size() - 1 > index) {
+              onCurrentViewRemoved();
               backStack.pop();
             }
+            onCurrentViewAppeared();
           }
         },
         Direction.BACKWARD,
@@ -141,6 +147,27 @@ public final class ScreenStack implements ScreenStackBase {
     return currentView;
   }
 
+  private void onCurrentViewAppeared() {
+    ViewProvider viewProvider = currentViewProvider();
+    if (viewProvider != null) {
+      viewProvider.onViewAppeared();
+    }
+  }
+
+  private void onCurrentViewRemoved() {
+    ViewProvider viewProvider = currentViewProvider();
+    if (viewProvider != null) {
+      viewProvider.onViewRemoved();
+    }
+  }
+
+  private void onCurrentViewHidden() {
+    ViewProvider viewProvider = currentViewProvider();
+    if (viewProvider != null) {
+      viewProvider.onViewHidden();
+    }
+  }
+
   private void animateAndRemove(
       final View from,
       final View to,
@@ -175,6 +202,11 @@ public final class ScreenStack implements ScreenStackBase {
       return backStack.peek();
     }
     return null;
+  }
+
+  private ViewProvider currentViewProvider() {
+    StateFulViewProvider stateFulViewProvider = currentStateFulViewProvider();
+    return stateFulViewProvider == null ? null : stateFulViewProvider.viewProvider;
   }
 
   static class StateFulViewProvider {
