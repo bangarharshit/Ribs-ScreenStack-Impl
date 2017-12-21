@@ -20,6 +20,10 @@ import android.content.Context;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import com.jakewharton.rxrelay2.BehaviorRelay;
+import io.reactivex.Observable;
 
 /** Top level view for {@link RootBuilder.RootScope}. */
 public class RootView extends FrameLayout implements RootInteractor.RootPresenter {

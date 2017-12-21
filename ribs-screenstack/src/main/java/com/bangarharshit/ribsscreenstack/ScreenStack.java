@@ -18,6 +18,7 @@ import static com.bangarharshit.ribsscreenstack.Views.whenMeasured;
 
 /**
  * An implementation of {@link ScreenStackBase} with support for animation and state restoration.
+ * It is inspired from Magellan
  */
 @UiThread
 public final class ScreenStack implements ScreenStackBase {
@@ -25,6 +26,7 @@ public final class ScreenStack implements ScreenStackBase {
   private final Deque<StateFulViewProvider> backStack = new ArrayDeque<>();
   private final ViewGroup parentViewGroup;
   private final Provider<Transition> defaultTransitionProvider;
+  private View ghostView;
 
   public ScreenStack(ViewGroup parentViewGroup,
       Provider<Transition> defaultTransitionProvider) {
@@ -134,7 +136,12 @@ public final class ScreenStack implements ScreenStackBase {
   }
 
   private View removeCurrentScreen() {
-    return parentViewGroup.getChildAt(0);
+    // if we were already animating a view, just skip it and remove the view immediately
+    if (isAnimating()) {
+      parentViewGroup.removeView(ghostView);
+      ghostView = null;
+    }
+    return parentViewGroup.getChildAt(0); // will remove at the end of the animation
   }
 
   private View showCurrentScreen(final Direction direction) {
@@ -182,6 +189,7 @@ public final class ScreenStack implements ScreenStackBase {
       parentViewGroup.removeView(from);
       return;
     }
+    ghostView = from;
     whenMeasured(to, new Views.OnMeasured() {
       @Override
       public void onMeasured() {
@@ -190,12 +198,21 @@ public final class ScreenStack implements ScreenStackBase {
           public void onAnimationEnd() {
             if (parentViewGroup != null) {
               parentViewGroup.removeView(from);
+              if (from == ghostView) {
+                // Only clear the ghost if it's the same as the view we just removed
+                ghostView = null;
+              }
             }
           }
         });
       }
     });
   }
+
+  private boolean isAnimating() {
+    return ghostView != null;
+  }
+
 
   private StateFulViewProvider currentStateFulViewProvider() {
     if (!backStack.isEmpty()) {

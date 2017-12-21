@@ -21,6 +21,7 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import com.bangarharshit.ribsscreenstack.ScreenStack;
 import com.bangarharshit.ribsscreenstack.transition.CrossFadeTransition;
+import com.bangarharshit.ribsscreenstack.transition.DefaultTransition;
 import com.bangarharshit.ribsscreenstack.transition.Transition;
 import com.harshitbangar.example.R;
 import com.uber.rib.core.InteractorBaseComponent;
@@ -96,7 +97,7 @@ public class RootBuilder extends ViewBuilder<RootView, RootRouter, RootBuilder.P
     static ScreenStack screenStack(RootView view) {
       return new ScreenStack(view, new Provider<Transition>() {
         @Override public Transition get() {
-          return new CrossFadeTransition();
+          return new DefaultTransition(DefaultTransition.NavigationType.SHOW);
         }
       });
     }

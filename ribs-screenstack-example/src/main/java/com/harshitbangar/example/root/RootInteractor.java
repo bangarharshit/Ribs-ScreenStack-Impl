@@ -27,10 +27,14 @@ import android.widget.EditText;
 import android.widget.TextView;
 import com.bangarharshit.ribsscreenstack.ScreenStack;
 import com.harshitbangar.example.R;
+import com.uber.autodispose.LifecycleScopeProvider;
+import com.uber.autodispose.ObservableScoper;
 import com.uber.rib.core.Bundle;
 import com.uber.rib.core.Interactor;
 import com.uber.rib.core.RibInteractor;
 import com.uber.rib.core.screenstack.ViewProvider;
+import io.reactivex.Observable;
+import io.reactivex.functions.Consumer;
 import javax.inject.Inject;
 
 /**
